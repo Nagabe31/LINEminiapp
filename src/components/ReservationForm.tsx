@@ -12,6 +12,15 @@ interface ReservationFormData {
   specialRequests: string
 }
 
+interface ReservationFormErrors {
+  customerName?: string
+  phoneNumber?: string
+  reservationDate?: string
+  reservationTime?: string
+  partySize?: string
+  specialRequests?: string
+}
+
 interface ReservationFormProps {
   onSubmit: (data: ReservationFormData) => void
   isLoading?: boolean
@@ -27,7 +36,7 @@ export default function ReservationForm({ onSubmit, isLoading = false }: Reserva
     specialRequests: ''
   })
 
-  const [errors, setErrors] = useState<Partial<ReservationFormData>>({})
+  const [errors, setErrors] = useState<ReservationFormErrors>({})
 
   // 明日の日付を最小値に設定
   const getMinDate = () => {
@@ -37,7 +46,7 @@ export default function ReservationForm({ onSubmit, isLoading = false }: Reserva
   }
 
   const validateForm = (): boolean => {
-    const newErrors: Partial<ReservationFormData> = {}
+    const newErrors: ReservationFormErrors = {}
 
     if (!formData.customerName.trim()) {
       newErrors.customerName = 'お名前を入力してください'
