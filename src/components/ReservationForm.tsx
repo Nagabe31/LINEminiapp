@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Calendar, Clock, Users, Phone, User, MessageSquare } from 'lucide-react'
+import { liffService, LiffUser } from '../lib/liff'
 
 interface ReservationFormData {
   customerName: string
@@ -37,6 +38,28 @@ export default function ReservationForm({ onSubmit, isLoading = false }: Reserva
   })
 
   const [errors, setErrors] = useState<ReservationFormErrors>({})
+  const [liffUser, setLiffUser] = useState<LiffUser | null>(null)
+  const [isLiffReady, setIsLiffReady] = useState(false)
+
+  // LIFF初期化
+  useEffect(() => {
+    const initLiff = async () => {
+      const success = await liffService.init()
+      if (success) {
+        const user = liffService.getUser()
+        setLiffUser(user)
+        if (user) {
+          setFormData(prev => ({
+            ...prev,
+            customerName: user.displayName
+          }))
+        }
+      }
+      setIsLiffReady(true)
+    }
+
+    initLiff()
+  }, [])
 
   // 明日の日付を最小値に設定
   const getMinDate = () => {
@@ -89,10 +112,40 @@ export default function ReservationForm({ onSubmit, isLoading = false }: Reserva
     }
   }
 
+  const handleLogin = async () => {
+    await liffService.login()
+  }
+
   const timeSlots = [
     '11:00', '11:30', '12:00', '12:30', '13:00', '13:30',
     '17:00', '17:30', '18:00', '18:30', '19:00', '19:30', '20:00', '20:30'
   ]
+
+  // LIFFが準備できていない場合はローディング表示
+  if (!isLiffReady) {
+    return (
+      <div className="text-center py-8">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto mb-4"></div>
+        <p className="text-gray-600">読み込み中...</p>
+      </div>
+    )
+  }
+
+  // LINEにログインしていない場合はログインボタンを表示
+  if (!liffUser) {
+    return (
+      <div className="text-center py-8">
+        <h2 className="text-xl font-bold text-gray-900 mb-4">LINEでログインしてください</h2>
+        <p className="text-gray-600 mb-6">予約するにはLINEアカウントでのログインが必要です</p>
+        <button
+          onClick={handleLogin}
+          className="bg-green-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-600 transition-colors"
+        >
+          LINEでログイン
+        </button>
+      </div>
+    )
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
