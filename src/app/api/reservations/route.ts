@@ -63,7 +63,27 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const restaurantId = searchParams.get('restaurantId')
     const date = searchParams.get('date')
+    const id = searchParams.get('id')
 
+    // 特定の予約を取得
+    if (id) {
+      const reservations = await ReservationService.getReservations(restaurantId || undefined)
+      const reservation = reservations.find(r => r.id === id)
+
+      if (!reservation) {
+        return NextResponse.json(
+          { error: '予約が見つかりません' },
+          { status: 404 }
+        )
+      }
+
+      return NextResponse.json({
+        success: true,
+        data: reservation
+      })
+    }
+
+    // 予約一覧を取得
     let reservations
     if (date) {
       reservations = await ReservationService.getReservationsByDate(date, restaurantId || undefined)
@@ -80,6 +100,65 @@ export async function GET(request: NextRequest) {
     console.error('予約取得エラー:', error)
     return NextResponse.json(
       { error: '予約の取得に失敗しました' },
+      { status: 500 }
+    )
+  }
+}
+
+// 予約を更新
+export async function PUT(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+    const body = await request.json()
+
+    if (!id) {
+      return NextResponse.json(
+        { error: '予約IDが必要です' },
+        { status: 400 }
+      )
+    }
+    
+    const reservation = await ReservationService.updateReservation(id, body)
+
+    return NextResponse.json({
+      success: true,
+      data: reservation
+    })
+
+  } catch (error) {
+    console.error('予約更新エラー:', error)
+    return NextResponse.json(
+      { error: '予約の更新に失敗しました' },
+      { status: 500 }
+    )
+  }
+}
+
+// 予約を削除
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+
+    if (!id) {
+      return NextResponse.json(
+        { error: '予約IDが必要です' },
+        { status: 400 }
+      )
+    }
+
+    await ReservationService.deleteReservation(id)
+
+    return NextResponse.json({
+      success: true,
+      message: '予約が削除されました'
+    })
+
+  } catch (error) {
+    console.error('予約削除エラー:', error)
+    return NextResponse.json(
+      { error: '予約の削除に失敗しました' },
       { status: 500 }
     )
   }
