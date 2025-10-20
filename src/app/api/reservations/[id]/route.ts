@@ -2,12 +2,18 @@ import { NextRequest, NextResponse } from 'next/server'
 import { ReservationService } from '../../../../lib/database'
 
 // 特定の予約を取得
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: NextRequest) {
   try {
-    const { id } = await params
+    const url = new URL(request.url)
+    const id = url.pathname.split('/').pop()
+
+    if (!id) {
+      return NextResponse.json(
+        { error: '予約IDが必要です' },
+        { status: 400 }
+      )
+    }
+
     const reservations = await ReservationService.getReservations()
     const reservation = reservations.find(r => r.id === id)
 
@@ -33,13 +39,18 @@ export async function GET(
 }
 
 // 予約を更新
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(request: NextRequest) {
   try {
-    const { id } = await params
+    const url = new URL(request.url)
+    const id = url.pathname.split('/').pop()
     const body = await request.json()
+
+    if (!id) {
+      return NextResponse.json(
+        { error: '予約IDが必要です' },
+        { status: 400 }
+      )
+    }
     
     const reservation = await ReservationService.updateReservation(id, body)
 
@@ -58,12 +69,18 @@ export async function PUT(
 }
 
 // 予約を削除
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(request: NextRequest) {
   try {
-    const { id } = await params
+    const url = new URL(request.url)
+    const id = url.pathname.split('/').pop()
+
+    if (!id) {
+      return NextResponse.json(
+        { error: '予約IDが必要です' },
+        { status: 400 }
+      )
+    }
+
     await ReservationService.deleteReservation(id)
 
     return NextResponse.json({
