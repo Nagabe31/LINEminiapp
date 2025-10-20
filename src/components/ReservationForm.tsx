@@ -44,18 +44,28 @@ export default function ReservationForm({ onSubmit, isLoading = false }: Reserva
   // LIFF初期化
   useEffect(() => {
     const initLiff = async () => {
-      const success = await liffService.init()
-      if (success) {
-        const user = liffService.getUser()
-        setLiffUser(user)
-        if (user) {
-          setFormData(prev => ({
-            ...prev,
-            customerName: user.displayName
-          }))
+      try {
+        const success = await liffService.init()
+        console.log('LIFF init result:', success)
+        
+        if (success) {
+          const user = liffService.getUser()
+          console.log('LIFF user:', user)
+          setLiffUser(user)
+          if (user) {
+            setFormData(prev => ({
+              ...prev,
+              customerName: user.displayName
+            }))
+          }
+        } else {
+          console.log('LIFF initialization failed, using fallback mode')
         }
+      } catch (error) {
+        console.error('LIFF initialization error:', error)
+      } finally {
+        setIsLiffReady(true)
       }
-      setIsLiffReady(true)
     }
 
     initLiff()
@@ -131,7 +141,7 @@ export default function ReservationForm({ onSubmit, isLoading = false }: Reserva
     )
   }
 
-  // LINEにログインしていない場合はログインボタンを表示
+  // LINEにログインしていない場合はログインボタンまたはフォールバックを表示
   if (!liffUser) {
     return (
       <div className="text-center py-8">
@@ -139,10 +149,19 @@ export default function ReservationForm({ onSubmit, isLoading = false }: Reserva
         <p className="text-gray-600 mb-6">予約するにはLINEアカウントでのログインが必要です</p>
         <button
           onClick={handleLogin}
-          className="bg-green-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-600 transition-colors"
+          className="bg-green-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-600 transition-colors mb-4"
         >
           LINEでログイン
         </button>
+        <div className="text-sm text-gray-500">
+          <p>ログインできない場合は、通常の予約フォームを使用できます</p>
+          <button
+            onClick={() => setLiffUser({ userId: 'guest', displayName: 'ゲストユーザー' })}
+            className="text-blue-500 underline mt-2"
+          >
+            ゲストとして続行
+          </button>
+        </div>
       </div>
     )
   }
