@@ -1,4 +1,4 @@
-import { supabase, Reservation, Restaurant } from './supabase'
+import { supabase, Reservation } from './supabase'
 
 // 予約関連のデータベース操作
 export class ReservationService {
