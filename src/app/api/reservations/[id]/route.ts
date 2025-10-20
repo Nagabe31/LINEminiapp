@@ -4,11 +4,12 @@ import { ReservationService } from '../../../../lib/database'
 // 特定の予約を取得
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const reservations = await ReservationService.getReservations()
-    const reservation = reservations.find(r => r.id === params.id)
+    const reservation = reservations.find(r => r.id === id)
 
     if (!reservation) {
       return NextResponse.json(
@@ -34,12 +35,13 @@ export async function GET(
 // 予約を更新
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const body = await request.json()
     
-    const reservation = await ReservationService.updateReservation(params.id, body)
+    const reservation = await ReservationService.updateReservation(id, body)
 
     return NextResponse.json({
       success: true,
@@ -58,10 +60,11 @@ export async function PUT(
 // 予約を削除
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await ReservationService.deleteReservation(params.id)
+    const { id } = await params
+    await ReservationService.deleteReservation(id)
 
     return NextResponse.json({
       success: true,
